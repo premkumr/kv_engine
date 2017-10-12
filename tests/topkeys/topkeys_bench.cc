@@ -14,6 +14,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
+#include <daemon/base_cookie.h>
 #include "daemon/topkeys.h"
 
 #include <gtest/gtest.h>
@@ -30,11 +31,16 @@ protected:
     std::unique_ptr<TopKeys> topkeys;
 };
 
+struct CountCookie : BaseCookie {
+    size_t count = 0;
+};
+
 static void dump_key(const char* key, const uint16_t klen,
                      const char* val, const uint32_t vlen,
                      const void* cookie) {
-    size_t* count = static_cast<size_t*>(const_cast<void*>(cookie));
-    (*count)++;
+    CountCookie* countCookie =
+            static_cast<CountCookie*>(const_cast<void*>(cookie));
+    countCookie->count++;
 }
 
 TEST_F(TopKeysTest, Basic) {
@@ -52,7 +58,7 @@ TEST_F(TopKeysTest, Basic) {
     }
 
     // Verify we hit all shards inside TopKeys
-    size_t count = 0;
-    topkeys->stats(&count, 0, dump_key);
-    EXPECT_EQ(80, count);
+    CountCookie countCookie;
+    topkeys->stats(&countCookie, 0, dump_key);
+    EXPECT_EQ(80, countCookie.count);
 }

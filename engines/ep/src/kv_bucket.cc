@@ -29,6 +29,7 @@
 #include <utility>
 #include <vector>
 
+#include <daemon/base_cookie.h>
 #include <phosphor/phosphor.h>
 #include <platform/make_unique.h>
 
@@ -54,6 +55,7 @@
 #include "replicationthrottle.h"
 #include "statwriter.h"
 #include "tasks.h"
+#include "trace_helpers.h"
 #include "vb_count_visitor.h"
 #include "vbucket.h"
 #include "vbucket_bgfetch_item.h"
@@ -928,19 +930,20 @@ bool KVBucket::resetVBucket_UNLOCKED(LockedVBucketPtr& vb,
 }
 
 extern "C" {
-
-    typedef struct {
+    struct snapshot_stats_t : BaseCookie {
         EventuallyPersistentEngine* engine;
         std::map<std::string, std::string> smap;
-    } snapshot_stats_t;
+    };
 
-    static void add_stat(const char *key, const uint16_t klen,
-                         const char *val, const uint32_t vlen,
-                         const void *cookie) {
+    static void add_stat(const char* key,
+                         const uint16_t klen,
+                         const char* val,
+                         const uint32_t vlen,
+                         const void* cookie) {
         if (cookie == nullptr) {
             throw std::invalid_argument("add_stat: cookie is NULL");
         }
-        void *ptr = const_cast<void *>(cookie);
+        void* ptr = const_cast<void*>(cookie);
         snapshot_stats_t* snap = static_cast<snapshot_stats_t*>(ptr);
         ObjectRegistry::onSwitchThread(snap->engine);
 
@@ -948,17 +951,17 @@ extern "C" {
         std::string v(val, vlen);
         snap->smap.insert(std::pair<std::string, std::string>(k, v));
     }
-}
+} // end extern C
 
 void KVBucket::snapshotStats() {
     snapshot_stats_t snap;
     snap.engine = &engine;
     bool rv = engine.getStats(&snap, NULL, 0, add_stat) == ENGINE_SUCCESS &&
-              engine.getStats(&snap, "dcp", 3, add_stat) == ENGINE_SUCCESS;
+        engine.getStats(&snap, "dcp", 3, add_stat) == ENGINE_SUCCESS;
 
     if (rv && stats.isShutdown) {
-        snap.smap["ep_force_shutdown"] = stats.forceShutdown ?
-                                                              "true" : "false";
+        snap.smap["ep_force_shutdown"] =
+            stats.forceShutdown ? "true" : "false";
         std::stringstream ss;
         ss << ep_real_time();
         snap.smap["ep_shutdown_time"] = ss.str();
@@ -1180,9 +1183,13 @@ void KVBucket::completeBGFetch(const DocKey& key,
                                const void* cookie,
                                ProcessClock::time_point init,
                                bool isMeta) {
+    TRACE_SCOPE("bgfetch");
     ProcessClock::time_point startTime(ProcessClock::now());
     // Go find the data
-    GetValue gcb = getROUnderlying(vbucket)->get(key, vbucket, isMeta);
+    GetValue gcb;
+    TRACE_BLOCK("store.read") {
+        gcb = getROUnderlying(vbucket)->get(key, vbucket, isMeta);
+    }
 
     {
       // Lock to prevent a race condition between a fetch for restore and delete
@@ -1244,7 +1251,7 @@ GetValue KVBucket::getInternal(const DocKey& key,
                                const void *cookie,
                                vbucket_state_t allowedState,
                                get_options_t options) {
-
+    TRACE_SCOPE("get.internal");
     vbucket_state_t disallowedState = (allowedState == vbucket_state_active) ?
         vbucket_state_replica : vbucket_state_active;
     VBucketPtr vb = getVBucket(vbucket);

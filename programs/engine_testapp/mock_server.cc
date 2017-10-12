@@ -1,23 +1,24 @@
 /* -*- Mode: C++; tab-width: 4; c-basic-offset: 4; indent-tabs-mode: nil -*- */
 
-#include "mock_server.h"
-
 #include "config.h"
-#include <stdlib.h>
-#include <string.h>
-#include <atomic>
-#include <time.h>
+
 #include <memcached/allocator_hooks.h>
 #include <memcached/engine.h>
 #include <memcached/engine_testapp.h>
 #include <memcached/extension.h>
 #include <memcached/extension_loggers.h>
 #include <memcached/server_api.h>
-#include "daemon/alloc_hooks.h"
-#include "daemon/protocol/mcbp/engine_errc_2_mcbp.h"
-#include "daemon/doc_pre_expiry.h"
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 #include <xattr/blob.h>
 #include <xattr/utils.h>
+#include <atomic>
+#include <iostream>
+#include "daemon/alloc_hooks.h"
+#include "daemon/doc_pre_expiry.h"
+#include "daemon/protocol/mcbp/engine_errc_2_mcbp.h"
+#include "mock_server.h"
 
 #include <array>
 #include <list>
@@ -67,6 +68,20 @@ mock_connstruct::mock_connstruct()
       num_processed_notifications(0) {
     cb_mutex_initialize(&mutex);
     cb_cond_initialize(&cond);
+    setTracingEnabled(false);
+}
+
+mock_connstruct::~mock_connstruct() {
+    if (isTracingEnabled()) {
+        auto data = to_string(tracer, true);
+        // DEBUGCODE
+        if (!data.empty()) {
+            std::cout << "[tracedata.begin:\n"
+                      << data << "\n"
+                      << to_string(tracer, false) << "\ntracedata.end]"
+                      << std::endl;
+        }
+    }
 }
 
 /* Forward declarations */

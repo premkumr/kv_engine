@@ -3,6 +3,8 @@ ADD_LIBRARY(mcd_util SHARED
             engine_loader.cc
             extension_loggers.cc
             protocol2text.cc
+            tracer.h
+            tracer.cc
             util.cc)
 TARGET_LINK_LIBRARIES(mcd_util engine_utilities platform)
 SET_TARGET_PROPERTIES(mcd_util PROPERTIES SOVERSION 1.0.0)

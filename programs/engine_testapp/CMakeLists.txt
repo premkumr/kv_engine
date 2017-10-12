@@ -7,8 +7,9 @@ ADD_EXECUTABLE(engine_testapp engine_testapp.cc
                ${Memcached_SOURCE_DIR}/utilities/terminate_handler.cc
                $<TARGET_OBJECTS:memory_tracking>)
 
+ADD_DEPENDENCIES(engine_testapp mcd_util)
 TARGET_LINK_LIBRARIES(engine_testapp mcd_util platform xattr
-                      ${MALLOC_LIBRARIES} ${COUCHBASE_NETWORK_LIBS})
+                      ${MALLOC_LIBRARIES} ${COUCHBASE_NETWORK_LIBS} mcd_util)
 INSTALL(TARGETS engine_testapp
         RUNTIME DESTINATION bin)
 

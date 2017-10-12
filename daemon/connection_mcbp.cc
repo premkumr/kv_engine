@@ -29,6 +29,7 @@
 #include <platform/strerror.h>
 #include <platform/timeutils.h>
 #include <utilities/protocol2text.h>
+#include <utilities/trace_helpers.h>
 #include <cctype>
 #include <exception>
 

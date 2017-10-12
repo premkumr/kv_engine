@@ -54,6 +54,7 @@
 #include <platform/make_unique.h>
 #include <platform/platform.h>
 #include <platform/processclock.h>
+#include <utilities/trace_helpers.h>
 #include <xattr/utils.h>
 
 #include <cstdio>
@@ -220,6 +221,7 @@ static ENGINE_ERROR_CODE EvpItemDelete(ENGINE_HANDLE* handle,
                                        uint64_t* cas,
                                        uint16_t vbucket,
                                        mutation_descr_t* mut_info) {
+    TRACE_SCOPE("ep.itemdelete");
     if (!cas) {
         LOG(EXTENSION_LOG_WARNING,
             "EvpItemDelete(): cas ptr passed is null for vb: %" PRIu16,
@@ -241,6 +243,7 @@ static cb::EngineErrorItemPair EvpGet(ENGINE_HANDLE* handle,
                                       const DocKey& key,
                                       uint16_t vbucket,
                                       DocStateFilter documentStateFilter) {
+    TRACE_SCOPE("ep.get");
     get_options_t options = static_cast<get_options_t>(QUEUE_BG_FETCH |
                                                        HONOR_STATES |
                                                        TRACK_REFERENCE |
@@ -277,6 +280,7 @@ static cb::EngineErrorItemPair EvpGetIf(ENGINE_HANDLE* handle,
                                         uint16_t vbucket,
                                         std::function<bool(
                                             const item_info&)> filter) {
+    TRACE_SCOPE("ep.getif");
     return acquireEngine(handle)->get_if(cookie, key, vbucket, filter);
 }
 
@@ -285,6 +289,7 @@ static cb::EngineErrorItemPair EvpGetAndTouch(ENGINE_HANDLE* handle,
                                               const DocKey& key,
                                               uint16_t vbucket,
                                               uint32_t expiry_time) {
+    TRACE_SCOPE("ep.gat");
     return acquireEngine(handle)->get_and_touch(cookie, key, vbucket,
                                                 expiry_time);
 }
@@ -294,6 +299,7 @@ static cb::EngineErrorItemPair EvpGetLocked(ENGINE_HANDLE* handle,
                                             const DocKey& key,
                                             uint16_t vbucket,
                                             uint32_t lock_timeout) {
+    TRACE_SCOPE("ep.getlocked");
     item* itm = nullptr;
     auto ret = acquireEngine(handle)->get_locked(
             cookie, &itm, key, vbucket, lock_timeout);
@@ -305,6 +311,7 @@ static ENGINE_ERROR_CODE EvpUnlock(ENGINE_HANDLE* handle,
                                    const DocKey& key,
                                    uint16_t vbucket,
                                    uint64_t cas) {
+    TRACE_SCOPE("ep.unlock");
     return acquireEngine(handle)->unlock(cookie, key, vbucket, cas);
 }
 
@@ -313,6 +320,7 @@ static ENGINE_ERROR_CODE EvpGetStats(ENGINE_HANDLE* handle,
                                      const char* stat_key,
                                      int nkey,
                                      ADD_STAT add_stat) {
+    TRACE_SCOPE("ep.getstats");
     return acquireEngine(handle)->getStats(cookie, stat_key, nkey, add_stat);
 }
 
@@ -322,6 +330,7 @@ static ENGINE_ERROR_CODE EvpStore(ENGINE_HANDLE* handle,
                                   uint64_t* cas,
                                   ENGINE_STORE_OPERATION operation,
                                   DocumentState document_state) {
+    TRACE_SCOPE("ep.store");
     auto engine = acquireEngine(handle);
 
     if (document_state == DocumentState::Deleted) {
@@ -339,6 +348,7 @@ static cb::EngineErrorCasPair EvpStoreIf(ENGINE_HANDLE* handle,
                                          ENGINE_STORE_OPERATION operation,
                                          cb::StoreIfPredicate predicate,
                                          DocumentState document_state) {
+    TRACE_SCOPE("ep.storeif");
     auto engine = acquireEngine(handle);
 
     Item& item = static_cast<Item&>(*static_cast<Item*>(itm));
@@ -351,6 +361,7 @@ static cb::EngineErrorCasPair EvpStoreIf(ENGINE_HANDLE* handle,
 
 static ENGINE_ERROR_CODE EvpFlush(ENGINE_HANDLE* handle,
                                   const void* cookie) {
+    TRACE_SCOPE("ep.flush");
     return acquireEngine(handle)->flush(cookie);
 }
 
@@ -1666,11 +1677,13 @@ static cb::EngineErrorMetadataPair EvpGetMeta(ENGINE_HANDLE* handle,
                                               const void* cookie,
                                               const DocKey& key,
                                               uint16_t vbucket) {
+    TRACE_SCOPE("ep.getmeta");
     return acquireEngine(handle)->getMeta(cookie, key, vbucket);
 }
 
 static bool EvpSetItemInfo(ENGINE_HANDLE* handle, const void* cookie,
                            item* itm, const item_info* itm_info) {
+    TRACE_SCOPE("ep.setiteminfo");
     Item* it = reinterpret_cast<Item*>(itm);
     if (!it) {
         return false;

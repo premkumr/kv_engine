@@ -1,15 +1,16 @@
 #ifndef MEMCACHED_MOCK_SERVER_H
 #define MEMCACHED_MOCK_SERVER_H
 
+#include <daemon/base_cookie.h>
 #include <memcached/engine.h>
 #include <memcached/engine_testapp.h>
 #include <platform/platform.h>
+#include <utilities/trace_helpers.h>
 
 #include <atomic>
 #include <string>
 
-struct mock_connstruct {
-
+struct mock_connstruct : public BaseCookie {
     mock_connstruct();
 
     uint64_t magic;
@@ -29,6 +30,7 @@ struct mock_connstruct {
     int references;
     uint64_t num_io_notifications;
     uint64_t num_processed_notifications;
+    ~mock_connstruct();
 };
 
 struct mock_callbacks {

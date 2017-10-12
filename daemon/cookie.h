@@ -16,6 +16,7 @@
  */
 #pragma once
 
+#include "base_cookie.h"
 #include "dynamic_buffer.h"
 
 #include <cJSON_utils.h>
@@ -51,7 +52,7 @@ class McbpConnection;
  * know what the argument is and provide it's own logic depending on
  * which field is set
  */
-class Cookie {
+class Cookie : public BaseCookie {
 public:
     explicit Cookie(McbpConnection& conn) : connection(conn) {
     }

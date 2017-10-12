@@ -38,7 +38,9 @@ std::map<std::string, std::string> StatTest::get_stat(const char* statkey) {
     // Define a lambda to use as the ADD_STAT callback. Note we cannot use
     // a capture for the statistics map (as it's a C-style callback), so
     // instead pass via the cookie.
-    using StatMap = std::map<std::string, std::string>;
+    struct StatMap : BaseCookie {
+        std::map<std::string, std::string> map;
+    };
     StatMap stats;
     auto add_stats = [](const char* key,
                         const uint16_t klen,
@@ -48,7 +50,7 @@ std::map<std::string, std::string> StatTest::get_stat(const char* statkey) {
         auto* stats = reinterpret_cast<StatMap*>(const_cast<void*>(cookie));
         std::string k(key, klen);
         std::string v(val, vlen);
-        (*stats)[k] = v;
+        stats->map[k] = v;
     };
 
     ENGINE_HANDLE* handle = reinterpret_cast<ENGINE_HANDLE*>(engine.get());
@@ -60,7 +62,7 @@ std::map<std::string, std::string> StatTest::get_stat(const char* statkey) {
                                 add_stats))
         << "Failed to get stats.";
 
-    return stats;
+    return stats.map;
 }
 
 class DatatypeStatTest : public StatTest,

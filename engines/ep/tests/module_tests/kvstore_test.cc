@@ -17,6 +17,7 @@
 
 #include "config.h"
 
+#include <daemon/base_cookie.h>
 #include <platform/dirutils.h>
 
 #include "callbacks.h"
@@ -191,18 +192,22 @@ static std::unique_ptr<KVStore> setup_kv_store(KVStoreConfig& config,
     return std::move(kvstore.rw);
 }
 
-/* Test callback for stats handling.
- * 'cookie' is a std::unordered_map<std::string, std::string) which stats
- * are accumulated in.
+/**
+ * Test callback for stats handling.
+ * StatsMap 'cookie' is a wrapper around
+ * std::unordered_map<std::string, std::string) which stats are accumulated in.
  */
+struct StatsMap : BaseCookie {
+    std::map<std::string, std::string> map;
+};
+
 static void add_stat_callback(const char *key, const uint16_t klen,
                               const char *val, const uint32_t vlen,
                               const void *cookie) {
-    auto* map = reinterpret_cast<std::map<std::string, std::string>*>(
-            const_cast<void*>(cookie));
-    ASSERT_NE(nullptr, map);
-    map->insert(std::make_pair(std::string(key, klen),
-                               std::string(val, vlen)));
+    auto* stats = reinterpret_cast<StatsMap*>(const_cast<void*>(cookie));
+    ASSERT_NE(nullptr, stats);
+    stats->map.insert(
+            std::make_pair(std::string(key, klen), std::string(val, vlen)));
 }
 
 /**
@@ -281,17 +286,18 @@ TEST_F(CouchKVStoreTest, StatsTest) {
     StatsCallback sc;
     EXPECT_TRUE(kvstore->commit(nullptr /*no collections manifest*/));
     // Check statistics are correct.
-    std::map<std::string, std::string> stats;
+    StatsMap stats;
     kvstore->addStats(add_stat_callback, &stats);
-    EXPECT_EQ("1", stats["rw_0:io_num_write"]);
-    const size_t io_write_bytes = stoul(stats["rw_0:io_write_bytes"]);
+    EXPECT_EQ("1", stats.map["rw_0:io_num_write"]);
+    const size_t io_write_bytes = stoul(stats.map["rw_0:io_write_bytes"]);
     EXPECT_EQ(key.size() + value.size() +
               MetaData::getMetaDataSize(MetaData::Version::V1),
               io_write_bytes);
 
     // Hard to determine exactly how many bytes should have been written, but
     // expect non-zero, and least as many as the actual documents.
-    const size_t io_total_write_bytes = stoul(stats["rw_0:io_total_write_bytes"]);
+    const size_t io_total_write_bytes =
+            stoul(stats.map["rw_0:io_total_write_bytes"]);
     EXPECT_GT(io_total_write_bytes, 0);
     EXPECT_GE(io_total_write_bytes, io_write_bytes);
 }
@@ -321,16 +327,18 @@ TEST_F(CouchKVStoreTest, CompactStatsTest) {
 
     EXPECT_TRUE(kvstore->compactDB(&cctx));
     // Check statistics are correct.
-    std::map<std::string, std::string> stats;
+    StatsMap stats;
     kvstore->addStats(add_stat_callback, &stats);
-    EXPECT_EQ("1", stats["rw_0:io_num_write"]);
-    const size_t io_write_bytes = stoul(stats["rw_0:io_write_bytes"]);
+    EXPECT_EQ("1", stats.map["rw_0:io_num_write"]);
+    const size_t io_write_bytes = stoul(stats.map["rw_0:io_write_bytes"]);
 
     // Hard to determine exactly how many bytes should have been written, but
     // expect non-zero, and at least twice as many as the actual documents for
     // the total and once as many for compaction alone.
-    const size_t io_total_write_bytes = stoul(stats["rw_0:io_total_write_bytes"]);
-    const size_t io_compaction_write_bytes = stoul(stats["rw_0:io_compaction_write_bytes"]);
+    const size_t io_total_write_bytes =
+            stoul(stats.map["rw_0:io_total_write_bytes"]);
+    const size_t io_compaction_write_bytes =
+            stoul(stats.map["rw_0:io_compaction_write_bytes"]);
     EXPECT_GT(io_total_write_bytes, 0);
     EXPECT_GT(io_compaction_write_bytes, 0);
     EXPECT_GT(io_total_write_bytes, io_compaction_write_bytes);

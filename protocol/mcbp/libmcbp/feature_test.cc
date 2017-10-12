@@ -18,22 +18,24 @@
 #include <mcbp/protocol/feature.h>
 #include <stdexcept>
 
-const std::map<cb::mcbp::Feature, std::string> blueprint = {
-        {{cb::mcbp::Feature::Invalid, "Invalid"},
-         {cb::mcbp::Feature::TLS, "TLS"},
-         {cb::mcbp::Feature::TCPNODELAY, "TCP NODELAY"},
-         {cb::mcbp::Feature::MUTATION_SEQNO, "Mutation seqno"},
-         {cb::mcbp::Feature::TCPDELAY, "TCP DELAY"},
-         {cb::mcbp::Feature::XATTR, "XATTR"},
-         {cb::mcbp::Feature::XERROR, "XERROR"},
-         {cb::mcbp::Feature::SELECT_BUCKET, "Select Bucket"},
-         {cb::mcbp::Feature::COLLECTIONS, "COLLECTIONS"},
-         {cb::mcbp::Feature::SNAPPY, "SNAPPY"},
-         {cb::mcbp::Feature::JSON, "JSON"},
-         {cb::mcbp::Feature::Duplex, "Duplex"},
-         {cb::mcbp::Feature::ClustermapChangeNotification,
-          "Clustermap change notification"},
-         {cb::mcbp::Feature::UnorderedExecution, "Unordered execution"}}};
+const std::map<cb::mcbp::Feature, std::string> blueprint = {{
+        {cb::mcbp::Feature::Invalid, "Invalid"},
+        {cb::mcbp::Feature::TLS, "TLS"},
+        {cb::mcbp::Feature::TCPNODELAY, "TCP NODELAY"},
+        {cb::mcbp::Feature::MUTATION_SEQNO, "Mutation seqno"},
+        {cb::mcbp::Feature::TCPDELAY, "TCP DELAY"},
+        {cb::mcbp::Feature::XATTR, "XATTR"},
+        {cb::mcbp::Feature::XERROR, "XERROR"},
+        {cb::mcbp::Feature::SELECT_BUCKET, "Select Bucket"},
+        {cb::mcbp::Feature::COLLECTIONS, "COLLECTIONS"},
+        {cb::mcbp::Feature::SNAPPY, "SNAPPY"},
+        {cb::mcbp::Feature::JSON, "JSON"},
+        {cb::mcbp::Feature::Duplex, "Duplex"},
+        {cb::mcbp::Feature::ClustermapChangeNotification,
+         "Clustermap change notification"},
+        {cb::mcbp::Feature::UnorderedExecution, "Unordered execution"},
+        {cb::mcbp::Feature::Tracing, "Tracing"},
+}};
 
 TEST(to_string, LegalValues) {
     for (const auto& entry : blueprint) {

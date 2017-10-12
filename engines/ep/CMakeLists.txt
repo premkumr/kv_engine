@@ -243,7 +243,7 @@ ADD_LIBRARY(ep SHARED $<TARGET_OBJECTS:ep_objs>)
 SET_TARGET_PROPERTIES(ep PROPERTIES PREFIX "")
 TARGET_LINK_LIBRARIES(ep cJSON JSON_checker ${EP_STORAGE_LIBS}
                       engine_utilities dirutils cbcompress
-                      platform phosphor xattr ${LIBEVENT_LIBRARIES})
+                      mcd_util platform phosphor xattr ${LIBEVENT_LIBRARIES})
 
 # Single executable containing all class-level unit tests involving
 # EventuallyPersistentEngine driven by GoogleTest.
@@ -374,7 +374,7 @@ TARGET_LINK_LIBRARIES(timing_tests platform)
 ADD_EXECUTABLE(ep-engine_sizes src/sizes.cc
                                $<TARGET_OBJECTS:ep_objs>)
 TARGET_LINK_LIBRARIES(ep-engine_sizes cJSON JSON_checker
-  engine_utilities ${EP_STORAGE_LIBS} dirutils cbcompress platform
+  engine_utilities ${EP_STORAGE_LIBS} dirutils cbcompress platform mcd_util
   phosphor xattr ${LIBEVENT_LIBRARIES})
 
 ADD_LIBRARY(ep_testsuite SHARED
